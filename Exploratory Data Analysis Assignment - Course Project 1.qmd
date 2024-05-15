@@ -1,0 +1,257 @@
+---
+title: "Individual Household Electric Power Consumption"
+subtitle: 'Exploratory Data Analysis'
+affiliation: 'Johns Hopkins University'
+author: 'Alejandro Navas González'
+format: html
+editor: visual
+---
+
+## **Exploratory Data Analysis**
+
+This assignment uses data from the [UC Irvine Machine Learning Repository](http://archive.ics.uci.edu/ml/), a popular repository for machine learning datasets. In particular, we will be using the “Individual household electric power consumption Data Set” which I have made available on the course web site:
+
+-   **Dataset**: Electric power consumption \[20Mb\]
+
+-   **Description**: Measurements of electric power consumption in one household with a one-minute sampling rate over a period of almost 4 years. Different electrical quantities and some sub-metering values are available.
+
+The following descriptions of the 9 variables in the dataset are taken from the [UCI web site](Exploratory%20Data%20Analysis):
+
+1.  Date: Date in format dd/mm/yyyy
+
+2.  Time: time in format hh:mm:ss
+
+3.  Global_active_power: household global minute-averaged active power (in kilowatt)
+
+4.  Global_reactive_power: household global minute-averaged reactive power (in kilowatt)
+
+5.  Voltage: minute-averaged voltage (in volt)
+
+6.  Global_intensity: household global minute-averaged current intensity (in ampere)
+
+7.  Sub_metering_1: energy sub-metering No. 1 (in watt-hour of active energy). It corresponds to the kitchen, containing mainly a dishwasher, an oven and a microwave (hot plates are not electric but gas powered).
+
+8.  Sub_metering_2: energy sub-metering No. 2 (in watt-hour of active energy). It corresponds to the laundry room, containing a washing-machine, a tumble-drier, a refrigerator and a light.
+
+9.  Sub_metering_3: energy sub-metering No. 3 (in watt-hour of active energy). It corresponds to an electric water-heater and an air-conditioner.
+
+## Loading Data
+
+```{r libraries}
+
+library(tidyverse)
+
+```
+
+```{r load_data}
+
+# Reading the CSV file with semicolon delimiter
+data <- read_delim("data/household_power_consumption.txt", 
+                 col_types = cols(
+                   Date = col_date(format = "%d/%m/%Y"),
+                   Time = col_time(format = "%H:%M:%S"),
+                   Global_active_power = col_double(),
+                   Global_reactive_power = col_double(),
+                   Voltage = col_double(),
+                   Global_intensity = col_double(),
+                   Sub_metering_1 = col_double(),
+                   Sub_metering_2 = col_double(),
+                   Sub_metering_3 = col_double()
+                 ), 
+                 delim = ';')
+
+# Display the first 10 rows of the dataset
+data |> head(10)
+
+```
+
+```{r check_parsing_problems_missing_data}
+
+# Check for parsing problems
+parsing_issues <- problems(data)
+print(parsing_issues)
+
+```
+
+```{r glimpse}
+
+# View structure and summary of the data
+glimpse(data)
+
+```
+
+```{r summary}
+
+summary(data)
+
+```
+
+```{r filter_dates}
+
+data_filtered <- data |> 
+  filter(Date >= as.Date("2007-02-01") &
+           Date <= as.Date("2007-02-02")) |> 
+  na.omit()
+
+glimpse(data_filtered)
+
+```
+
+## Making Plots
+
+```{r plot_1}
+
+# Set the output file for the first plot
+png(file = "plots/plot1.png", width = 480, height = 480)
+
+# Create the plot - example with histogram of Global Active Power
+hist(data_filtered$Global_active_power, 
+     main = "Global Active Power",
+     xlab = "Global Active Power (kilowatts)", 
+     col = "red")
+
+# Close the device
+dev.off()
+
+
+```
+
+```{r plot_2}
+
+# Set the output file for the first plot
+png(file = "plots/plot2.png", width = 480, height = 480)
+
+# Create a combined datetime column if not already done
+data_filtered$DateTime <- as.POSIXct(paste(data_filtered$Date, data_filtered$Time),
+                                     format="%Y-%m-%d %H:%M:%S")
+
+# Create a new column that reflects weekday
+data_filtered$DayOfWeek <- weekdays(data_filtered$Date, abbreviate = TRUE)
+
+# Create the time series plot
+with(data_filtered, {
+ plot(DateTime, 
+      Global_active_power, 
+     type = "l", 
+     xlab = "", 
+     ylab = "Global Active Power (kilowatts)", 
+     col = "steelblue",
+     las = 1, 
+     xaxt = 'n')
+  # Customizing the x-axis using days of the week
+  axis.POSIXct(1,
+               at = seq(min(DateTime), max(DateTime), by="days"), 
+               format = "%A", labels = c('Thursday', 'Friday'))
+})
+
+# Close the device#DateTime Close the device
+dev.off()
+
+
+```
+
+```{r plot_3}
+
+# Set the output file for the first plot
+png(file = "plots/plot3.png", width = 480, height = 480)
+
+# Plotting sub-metering values
+with(data_filtered, {
+  plot(DateTime, Sub_metering_1, type = "l", col = "black", 
+       xlab = "", ylab = "Energy Sub Metering", 
+       ylim = c(0, max(Sub_metering_1, Sub_metering_2, Sub_metering_3)),
+       xaxt = 'n')  # Customize the x-axis
+  lines(DateTime, Sub_metering_2, col = "red")
+  lines(DateTime, Sub_metering_3, col = "blue")
+  legend("topright", col = c("black", "red", "blue"), 
+         legend = c("Sub_metering_1", "Sub_metering_2", "Sub_metering_3"), lty = 1)
+  # Customizing the x-axis using days of the week
+  axis.POSIXct(1, at = seq(min(DateTime), max(DateTime), by="days"), 
+               format = "%A", labels = c('Thursday', 'Friday'))
+})
+
+
+
+# Close the device
+dev.off()
+
+
+```
+
+```{r plot_4}
+
+# Set the output file for the first plot
+png(file = "plots/plot4.png", width = 480, height = 480)
+
+# Setting up the plotting area
+par(mfrow=c(2,2), mar=c(4, 4, 2, 1))
+
+
+# Create the time series plot
+with(data_filtered, {
+ plot(DateTime, 
+      Global_active_power, 
+     type = "l", 
+     xlab = "", 
+     ylab = "Global Active Power (kilowatts)", 
+     col = "steelblue",
+     las = 1, 
+     xaxt = 'n')
+  # Customizing the x-axis using days of the week
+  axis.POSIXct(1,
+               at = seq(min(DateTime), max(DateTime), by="days"), 
+               format = "%A", labels = c('Thursday', 'Friday'))
+})
+
+# Create the time series plot
+with(data_filtered, {
+ plot(DateTime, 
+      Voltage, 
+     type = "l", 
+     xlab = "", 
+     ylab = "Voltage (volt)", 
+     col = "steelblue",
+     las = 1, 
+     xaxt = 'n')
+  # Customizing the x-axis using days of the week
+  axis.POSIXct(1,
+               at = seq(min(DateTime), max(DateTime), by="days"), 
+               format = "%A", labels = c('Thursday', 'Friday'))
+})
+
+# Plotting sub-metering values
+with(data_filtered, {
+  plot(DateTime, Sub_metering_1, type = "l", col = "black", 
+       xlab = "", ylab = "Energy Sub Metering", 
+       ylim = c(0, max(Sub_metering_1, Sub_metering_2, Sub_metering_3)),
+       xaxt = 'n')  # Customize the x-axis
+  lines(DateTime, Sub_metering_2, col = "red")
+  lines(DateTime, Sub_metering_3, col = "blue")
+  legend("topright", col = c("black", "red", "blue"), 
+         legend = c("Sub_metering_1", "Sub_metering_2", "Sub_metering_3"), lty = 1)
+  # Customizing the x-axis using days of the week
+  axis.POSIXct(1, at = seq(min(DateTime), max(DateTime), by="days"), 
+               format = "%A", labels = c('Thursday', 'Friday'))
+})
+
+# Create the time series plot
+with(data_filtered, {
+ plot(DateTime, 
+      Global_reactive_power, 
+     type = "l", 
+     xlab = "", 
+     ylab = "Global Reactive Power (kilowatts)", 
+     col = "steelblue",
+     las = 1, 
+     xaxt = 'n')
+  # Customizing the x-axis using days of the week
+  axis.POSIXct(1,
+               at = seq(min(DateTime), max(DateTime), by="days"), 
+               format = "%A", labels = c('Thursday', 'Friday'))
+})
+
+# Close the device
+dev.off()
+
+
+```
