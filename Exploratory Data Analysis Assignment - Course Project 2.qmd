@@ -259,10 +259,10 @@ total_emissions_vehicle_la <- total_emissions_vehicle_la %>%
   mutate(city = "Los Angeles County")
 
 # Combine data from both cities in a single dataframe
-total_emissions_vehicle <- bind_rows(total_emissions_vehicle_baltimore, total_emissions_vehicle_la)
+total_emissions_vehicle_2 <- bind_rows(total_emissions_vehicle_baltimore, total_emissions_vehicle_la)
 
 # Create the graph with ggplot2
-ggplot(total_emissions_vehicle, aes(x = year, y = total_emissions, color = city, group = city)) +
+ggplot(total_emissions_vehicle_2, aes(x = year, y = total_emissions, color = city, group = city)) +
   geom_line() +
   geom_point() +
   labs(title = "Comparison of PM2.5 Emissions from Motor Vehicle Sources (1999-2008)",
@@ -331,7 +331,7 @@ ggplot(total_emissions_vehicle, aes(x = year, y = total_emissions)) +
 dev.off()
 
 png("plots/project2_plot6_emissions_vehicle_comparison.png")
-ggplot(total_emissions_vehicle, aes(x = year, y = total_emissions, color = city, group = city)) +
+ggplot(total_emissions_vehicle_2, aes(x = year, y = total_emissions, color = city, group = city)) +
   geom_line() +
   geom_point() +
   labs(title = "Comparison of PM2.5 Emissions from Motor Vehicle Sources (1999-2008)",

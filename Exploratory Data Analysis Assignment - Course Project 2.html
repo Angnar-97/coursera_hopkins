@@ -343,10 +343,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb12-23"><a href="#cb12-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">city =</span> <span class="st">"Los Angeles County"</span>)</span>
 <span id="cb12-24"><a href="#cb12-24" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb12-25"><a href="#cb12-25" aria-hidden="true" tabindex="-1"></a><span class="co"># Combine data from both cities in a single dataframe</span></span>
-<span id="cb12-26"><a href="#cb12-26" aria-hidden="true" tabindex="-1"></a>total_emissions_vehicle <span class="ot">&lt;-</span> <span class="fu">bind_rows</span>(total_emissions_vehicle_baltimore, total_emissions_vehicle_la)</span>
+<span id="cb12-26"><a href="#cb12-26" aria-hidden="true" tabindex="-1"></a>total_emissions_vehicle_2 <span class="ot">&lt;-</span> <span class="fu">bind_rows</span>(total_emissions_vehicle_baltimore, total_emissions_vehicle_la)</span>
 <span id="cb12-27"><a href="#cb12-27" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb12-28"><a href="#cb12-28" aria-hidden="true" tabindex="-1"></a><span class="co"># Create the graph with ggplot2</span></span>
-<span id="cb12-29"><a href="#cb12-29" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(total_emissions_vehicle, <span class="fu">aes</span>(<span class="at">x =</span> year, <span class="at">y =</span> total_emissions, <span class="at">color =</span> city, <span class="at">group =</span> city)) <span class="sc">+</span></span>
+<span id="cb12-29"><a href="#cb12-29" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(total_emissions_vehicle_2, <span class="fu">aes</span>(<span class="at">x =</span> year, <span class="at">y =</span> total_emissions, <span class="at">color =</span> city, <span class="at">group =</span> city)) <span class="sc">+</span></span>
 <span id="cb12-30"><a href="#cb12-30" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>() <span class="sc">+</span></span>
 <span id="cb12-31"><a href="#cb12-31" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>() <span class="sc">+</span></span>
 <span id="cb12-32"><a href="#cb12-32" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Comparison of PM2.5 Emissions from Motor Vehicle Sources (1999-2008)"</span>,</span>
@@ -429,7 +429,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   2 </code></pre>
 </div>
 <div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="fu">png</span>(<span class="st">"plots/project2_plot6_emissions_vehicle_comparison.png"</span>)</span>
-<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(total_emissions_vehicle, <span class="fu">aes</span>(<span class="at">x =</span> year, <span class="at">y =</span> total_emissions, <span class="at">color =</span> city, <span class="at">group =</span> city)) <span class="sc">+</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(total_emissions_vehicle_2, <span class="fu">aes</span>(<span class="at">x =</span> year, <span class="at">y =</span> total_emissions, <span class="at">color =</span> city, <span class="at">group =</span> city)) <span class="sc">+</span></span>
 <span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>() <span class="sc">+</span></span>
 <span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>() <span class="sc">+</span></span>
 <span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Comparison of PM2.5 Emissions from Motor Vehicle Sources (1999-2008)"</span>,</span>
