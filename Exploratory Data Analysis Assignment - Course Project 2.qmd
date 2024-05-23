@@ -1,0 +1,346 @@
+---
+title: "Setting National Ambient Air Quality Standards"
+subtitle: 'Exploratory Data Analysis'
+affiliation: 'Johns Hopkins University'
+author: 'Alejandro Navas González'
+format: html
+editor: visual
+---
+
+# **Exploratory Data Analysis**
+
+## **Introduction**
+
+Fine particulate matter (PM2.5) is an ambient air pollutant for which there is strong evidence that it is harmful to human health. In the United States, the Environmental Protection Agency (EPA) is tasked with setting national ambient air quality standards for fine PM and for tracking the emissions of this pollutant into the atmosphere. Approximately every 3 years, the EPA releases its database on emissions of PM2.5. This database is known as the National Emissions Inventory (NEI). You can read more information about the NEI at the (EPA National Emissions Inventory web site)[http://www.epa.gov/ttn/chief/eiinformation.html].
+
+For each year and for each type of PM source, the NEI records how many tons of PM2.5 were emitted from that source over the course of the entire year. The data that you will use for this assignment are for 1999, 2002, 2005, and 2008.
+
+## **The Data**
+
+The data for this assignment are available from the course web site as a single zip file:
+
+- Data for Peer Assessment [29Mb]
+
+The zip file contains two files:
+
+**PM2.5 Emissions Data (summarySCC_PM25.rds)**: This file contains a data frame with all of the PM2.5 emissions data for 1999, 2002, 2005, and 2008. For each year, the table contains number of tons of PM2.5 emitted from a specific type of source for the entire year. Here are the first few rows.
+
+```{r example}
+
+##     fips      SCC Pollutant Emissions  type year
+## 4  09001 10100401  PM25-PRI    15.714 POINT 1999
+## 8  09001 10100404  PM25-PRI   234.178 POINT 1999
+## 12 09001 10100501  PM25-PRI     0.128 POINT 1999
+## 16 09001 10200401  PM25-PRI     2.036 POINT 1999
+## 20 09001 10200504  PM25-PRI     0.388 POINT 1999
+## 24 09001 10200602  PM25-PRI     1.490 POINT 1999
+
+```
+
+The variables are: 
+
+1. *fips*: A five-digit number (represented as a string) indicating the U.S. county
+
+2. *SCC*: The name of the source as indicated by a digit string (see source code classification table)
+
+3. *Pollutant*: A string indicating the pollutant
+
+4. *Emissions*: Amount of PM2.5 emitted, in tons
+
+5. *type*: The type of source (point, non-point, on-road, or non-road)
+
+6. *year*: The year of emissions recorded
+
+**Source Classification Code Table (Source_Classification_Code.rds)**: This table provides a mapping from the SCC digit strings in the Emissions table to the actual name of the PM2.5 source. The sources are categorized in a few different ways from more general to more specific and you may choose to explore whatever categories you think are most useful. For example, source “10100101” is known as “Ext Comb /Electric Gen /Anthracite Coal /Pulverized Coal”.
+
+You can read each of the two files using the *readRDS()* function in R. For example, reading in each file can be done with the following code:
+
+```{r read_rds}
+## This first line will likely take a few seconds. Be patient!
+NEI <- readRDS("data/summarySCC_PM25.rds")
+SCC <- readRDS("data/Source_Classification_Code.rds")
+```
+
+## Assignment
+
+The overall goal of this assignment is to explore the National Emissions Inventory database and see what it say about fine particulate matter pollution in the United states over the 10-year period 1999–2008. You may use any R package you want to support your analysis.
+
+### Questions
+
+You must address the following questions and tasks in your exploratory analysis. For each question/task you will need to make a single plot. Unless specified, you can use any plotting system in R to make your plot.
+
+1. Have total emissions from PM2.5 decreased in the United States from 1999 to 2008? Using the base plotting system, make a plot showing the total PM2.5 emission from all sources for each of the years 1999, 2002, 2005, and 2008.
+
+2. Have total emissions from PM2.5 decreased in the Baltimore City, Maryland (fips == "24510") from 1999 to 2008? Use the base plotting system to make a plot answering this question.
+
+3. Of the four types of sources indicated by the type (point, nonpoint, onroad, nonroad) variable, which of these four sources have seen decreases in emissions from 1999–2008 for Baltimore City? Which have seen increases in emissions from 1999–2008? Use the ggplot2 plotting system to make a plot answer this question.
+
+4. Across the United States, how have emissions from coal combustion-related sources changed from 1999–2008?
+
+5. How have emissions from motor vehicle sources changed from 1999–2008 in Baltimore City?
+
+6. Compare emissions from motor vehicle sources in Baltimore City with emissions from motor vehicle sources in Los Angeles County, California (fips == "06037"). Which city has seen greater changes over time in motor vehicle emissions?
+
+## Plot Instructions
+
+- Construct the plot and save it to a PNG file.
+
+- Create a separate R code file (plot1.R, plot2.R, etc.) that constructs the corresponding plot, i.e. code in plot1.R constructs the plot1.png plot. Your code file should include code for reading the data so that the plot can be fully reproduced. You must also include the code that creates the PNG file. Only include the code for a single plot (i.e. plot1.R should only include code for producing plot1.png).
+
+- Upload the PNG file on the Assignment submission page
+
+- Copy and paste the R code from the corresponding R file into the text box at the appropriate point in the peer assessment.
+
+## Load Libraries
+
+```{r load_libraries}
+
+library(tidyverse)
+
+```
+
+
+## 1 - Total PM2.5 Emissions Decrease (1999–2008)
+
+To determine whether total emissions from PM2.5 have decreased in the US from 1999 to 2008, we could aggregate the total PM2.5 emissions by year and then plot them as shown below.
+
+```{r emissions_decrease}
+
+# Sum emissions data by year
+total_emissions <- NEI %>%
+  group_by(year) %>%
+  summarize(total = sum(Emissions)) |> 
+  ungroup()
+
+
+# Create the plot with base R
+plot(y = total_emissions$total,
+     x = total_emissions$year,
+     type = "b",
+     xlab = "Year", ylab = "Total PM2.5 Emissions (tons)",
+     main = "Total PM2.5 Emissions in the United States (1999-2008)",
+     pch = 19, col = "steelblue", lwd = 2)
+
+```
+
+## 2 - Emissions Decrease in Baltimore (1999–2008)
+
+Similar to the first plot but filtered for Baltimore City (fips == "24510").
+
+```{r baltimore}
+
+baltimore_emissions <- NEI %>%
+  filter(fips == "24510") %>%
+  group_by(year) %>%
+  summarize(total = sum(Emissions))
+
+plot(y = baltimore_emissions$total,
+     x = baltimore_emissions$year,
+     type = "b",
+     xlab = "Year", ylab = "Total PM2.5 Emissions (tons)",
+     main = "Total PM2.5 Emissions in Baltimore City, MD (1999-2008)",
+     pch = 19, col = "steelblue", lwd = 2)
+
+```
+
+
+## 3 - Emissions by Source Type in Baltimore (1999–2008)
+
+To answer this question, we will need to break down emissions by source type for Baltimore City (fips == "24510") and then create a graph using ggplot2 that shows trends in PM2.5 emissions from 1999 to 2008 for each source type.
+
+```{r baltimore_type}
+
+baltimore_type_emissions <- NEI %>%
+  filter(fips == "24510") %>%
+  group_by(year, type) %>%
+  summarize(total = sum(Emissions))
+
+ggplot(baltimore_type_emissions, aes(x = year, y = total, color = type)) +
+  geom_line() +
+  facet_wrap(~type) +
+  labs(title = "PM2.5 Emissions by Source Type in Baltimore (1999-2008)",
+       x = "Year",
+       y = "Emissions (tons)") +
+  theme_minimal() +
+  theme(legend.position = "top")
+
+```
+
+## 4 - Emissions from Coal Combustion-Related Sources (1999–2008)
+
+To analyze how emissions from coal combustion-related sources have changed in the United States from 1999 to 2008, we first need to identify coal combustion-related sources using the source classification code (SCC). Then, we will filter out PM2.5 emissions related to these sources and create a graph to visualize the changes over time.
+
+```{r coal_emissions}
+
+# Identify sources related to coal combustion.
+coal_combustion <- grep("coal", SCC$EI.Sector, ignore.case = TRUE)
+SCC_coal_combustion <- SCC[coal_combustion, ]
+
+# Filter NEI data to obtain only emissions related to coal combustion
+NEI_coal_combustion <- NEI %>%
+  filter(SCC %in% SCC_coal_combustion$SCC)
+
+# Calculate total emissions per year for sources related to coal combustion
+total_emissions_coal <- NEI_coal_combustion %>%
+  group_by(year) %>%
+  summarize(total_emissions = sum(Emissions, na.rm = TRUE))
+
+# Create the graph with ggplot2
+ggplot(total_emissions_coal, aes(x = year, y = total_emissions)) +
+  geom_line(col='darkred', lwd = 0.6) +
+  geom_point() +
+  labs(title = "Total PM2.5 Emissions from Coal Combustion-Related Sources in the U.S. (1999-2008)",
+       x = "Year",
+       y = "Total Emissions (tons)") +
+  theme_minimal()
+
+```
+
+
+## 5 - Emissions from Vehicle Type in Baltimore (1999–2008)
+
+To analyze how emissions from motor vehicle sources in Baltimore City (fips == "24510") have changed from 1999 to 2008, we first need to identify motor vehicle-related sources using the source classification code (SCC). Then, we will filter out PM2.5 emissions related to these specific sources and create a graph to visualize changes over time.
+
+```{r motorv_baltimore}
+
+#  Identify sources related to motor vehicles
+vehicle_sources <- grep("vehicle", SCC$EI.Sector, ignore.case = TRUE)
+SCC_vehicle_sources <- SCC[vehicle_sources, ]
+
+# Filter NEI data to obtain only motor vehicle-related emissions in Baltimore City.
+baltimore_vehicle_NEI <- NEI %>%
+  filter(fips == "24510" & SCC %in% SCC_vehicle_sources$SCC)
+
+# Calculate total emissions per year for motor vehicle sources in Baltimore City.
+total_emissions_vehicle <- baltimore_vehicle_NEI %>%
+  group_by(year) %>%
+  summarize(total_emissions = sum(Emissions, na.rm = TRUE))
+
+# Create the graph with ggplot2
+ggplot(total_emissions_vehicle, aes(x = year, y = total_emissions)) +
+  geom_line(col='coral2', lwd = 0.6) +
+  geom_point() +
+  labs(title = "Total PM2.5 Emissions from Motor Vehicle Sources in Baltimore City (1999-2008)",
+       x = "Year",
+       y = "Total Emissions (tons)") +
+  theme_minimal()
+
+```
+
+
+## 6 - Baltimore Vs Los Ángeles
+
+To compare emissions from motor vehicle sources in Baltimore City (fips == "24510") to those in Los Angeles County, California (fips == "06037"), we will identify motor vehicle-related sources using the source classification code (SCC) and filter out PM2.5 emissions related to these specific sources for both locations. Then, we calculate total emissions per year for each location and finally create a graph using ggplot2 to visualize and compare changes in emissions over time.
+
+```{r bla}
+
+# Identify sources related to motorized vehicles
+vehicle_sources <- grep("vehicle", SCC$EI.Sector, ignore.case = TRUE)
+SCC_vehicle_sources <- SCC[vehicle_sources, ]
+
+# Filter NEI data to obtain only motor vehicle-related emissions in Baltimore City and Los Angeles County.
+baltimore_vehicle_NEI <- NEI %>%
+  filter(fips == "24510" & SCC %in% SCC_vehicle_sources$SCC)
+la_vehicle_NEI <- NEI %>%
+  filter(fips == "06037" & SCC %in% SCC_vehicle_sources$SCC)
+
+# Calculate total emissions per year for motor vehicle sources in Baltimore City and Los Angeles County
+total_emissions_vehicle_baltimore <- baltimore_vehicle_NEI %>%
+  group_by(year) %>%
+  summarize(total_emissions = sum(Emissions, na.rm = TRUE))
+total_emissions_vehicle_la <- la_vehicle_NEI %>%
+  group_by(year) %>%
+  summarize(total_emissions = sum(Emissions, na.rm = TRUE))
+
+# Add a column to identify the city
+total_emissions_vehicle_baltimore <- total_emissions_vehicle_baltimore %>%
+  mutate(city = "Baltimore City")
+total_emissions_vehicle_la <- total_emissions_vehicle_la %>%
+  mutate(city = "Los Angeles County")
+
+# Combine data from both cities in a single dataframe
+total_emissions_vehicle <- bind_rows(total_emissions_vehicle_baltimore, total_emissions_vehicle_la)
+
+# Create the graph with ggplot2
+ggplot(total_emissions_vehicle, aes(x = year, y = total_emissions, color = city, group = city)) +
+  geom_line() +
+  geom_point() +
+  labs(title = "Comparison of PM2.5 Emissions from Motor Vehicle Sources (1999-2008)",
+       x = "Year",
+       y = "Total Emissions (tons)",
+       color = "City") +
+  theme_minimal() +
+  theme(legend.position = "top")
+
+```
+
+
+## Saving Plots
+
+For saving your plots to PNG files, we can use pmg() function before each plot.
+
+```{r save}
+
+png("plots/project2_plot1_total_emissions_us.png")
+plot(y = total_emissions$total,
+     x = total_emissions$year,
+     type = "b",
+     xlab = "Year", ylab = "Total PM2.5 Emissions (tons)",
+     main = "Total PM2.5 Emissions in the United States (1999-2008)",
+     pch = 19, col = "steelblue", lwd = 2)
+dev.off()
+
+png("plots/project2_plot2_total_emissions_baltimore.png")
+plot(y = baltimore_emissions$total,
+     x = baltimore_emissions$year,
+     type = "b",
+     xlab = "Year", ylab = "Total PM2.5 Emissions (tons)",
+     main = "Total PM2.5 Emissions in Baltimore City, MD (1999-2008)",
+     pch = 19, col = "steelblue", lwd = 2)
+dev.off()
+
+png("plots/project2_plot3_emissions_by_source_baltimore.png")
+ggplot(baltimore_type_emissions, aes(x = year, y = total, color = type)) +
+  geom_line() +
+  facet_wrap(~type) +
+  labs(title = "PM2.5 Emissions by Source Type in Baltimore (1999-2008)",
+       x = "Year",
+       y = "Emissions (tons)") +
+  theme_minimal() +
+  theme(legend.position = "top")
+dev.off()
+
+png("plots/project2_plot4_emissions_coal_us.png")
+ggplot(total_emissions_coal, aes(x = year, y = total_emissions)) +
+  geom_line(col='darkred', lwd = 0.6) +
+  geom_point() +
+  labs(title = "Total PM2.5 Emissions from Coal Combustion-Related Sources in the U.S. (1999-2008)",
+       x = "Year",
+       y = "Total Emissions (tons)") +
+  theme_minimal()
+dev.off()
+
+png("plots/project2_plot5_emissions_vehicle_baltimore.png")
+ggplot(total_emissions_vehicle, aes(x = year, y = total_emissions)) +
+  geom_line(col='coral2', lwd = 0.6) +
+  geom_point() +
+  labs(title = "Total PM2.5 Emissions from Motor Vehicle Sources in Baltimore City (1999-2008)",
+       x = "Year",
+       y = "Total Emissions (tons)") +
+  theme_minimal()
+dev.off()
+
+png("plots/project2_plot6_emissions_vehicle_comparison.png")
+ggplot(total_emissions_vehicle, aes(x = year, y = total_emissions, color = city, group = city)) +
+  geom_line() +
+  geom_point() +
+  labs(title = "Comparison of PM2.5 Emissions from Motor Vehicle Sources (1999-2008)",
+       x = "Year",
+       y = "Total Emissions (tons)",
+       color = "City") +
+  theme_minimal() +
+  theme(legend.position = "top")
+dev.off()
+
+```
+
