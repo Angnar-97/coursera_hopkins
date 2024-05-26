@@ -277,7 +277,7 @@ ggplot(total_emissions_vehicle_2, aes(x = year, y = total_emissions, color = cit
 
 ## Saving Plots
 
-For saving your plots to PNG files, we can use pmg() function before each plot.
+For saving your plots to PNG files, we can use png() function before each plot.
 
 ```{r save}
 
