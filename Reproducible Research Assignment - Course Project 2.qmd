@@ -1,0 +1,239 @@
+---
+title: "Personal Activity Monitoring Device Research"
+subtitle: 'Reproducible Research'
+affiliation: 'Johns Hopkins University'
+author: 'Alejandro Navas González'
+format: html
+editor: source
+---
+
+## **Introduction**
+
+Storms and other severe weather events can cause both public health and economic problems for communities and municipalities. Many severe events can result in fatalities, injuries, and property damage, and preventing such outcomes to the extent possible is a key concern.
+
+This project involves exploring the **U.S. National Oceanic and Atmospheric Administration's (NOAA) storm database**. This database tracks characteristics of major storms and weather events in the United States, including when and where they occur, as well as estimates of any fatalities, injuries, and property damage.
+
+## **Data**
+
+The data for this assignment come in the form of a comma-separated-value file compressed via the bzip2 algorithm to reduce its size. You can download the file from the course web site:
+
+- [Storm Data](https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2FStormData.csv.bz2) [47Mb]
+
+There is also some documentation of the database available. Here you will find how some of the variables are constructed/defined.
+
+- National Weather Service [Storm Data Documentation](https://d396qusza40orc.cloudfront.net/repdata%2Fpeer2_doc%2Fpd01016005curr.pdf)
+
+- National Climatic Data Center Storm Events [FAQ](https://d396qusza40orc.cloudfront.net/repdata%2Fpeer2_doc%2FNCDC%20Storm%20Events-FAQ%20Page.pdf)
+
+The events in the database start in the year 1950 and end in November 2011. In the earlier years of the database there are generally fewer events recorded, most likely due to a lack of good records. More recent years should be considered more complete.
+
+## **Assignment**
+
+The basic goal of this assignment is to explore the NOAA Storm Database and answer some basic questions about severe weather events. You must use the database to answer the questions below and show the code for your entire analysis. Your analysis can consist of tables, figures, or other summaries. You may use any R package you want to support your analysis.
+
+### **Questions**
+
+Your data analysis must address the following questions:
+
+    
+1. Across the United States, which types of events (as indicated in the EVTYPE variable) are most harmful with respect to population health?
+
+    
+2. Across the United States, which types of events have the greatest economic consequences?
+
+Consider writing your report as if it were to be read by a government or municipal manager who might be responsible for preparing for severe weather events and will need to prioritize resources for different types of events. However, there is no need to make any specific recommendations in your report.
+
+### **Requirements**
+
+For this assignment you will need some specific tools
+
+        
+- RStudio: You will need RStudio to publish your completed analysis document to RPubs. You can also use RStudio to edit/write your analysis.
+
+        
+- knitr: You will need the knitr package in order to compile your R Markdown document and convert it to HTML
+
+### **Document Layout**
+
+- Language: Your document should be written in English.
+
+- Title: Your document should have a title that briefly summarizes your data analysis
+
+- Synopsis: Immediately after the title, there should be a synopsis which describes and summarizes your analysis in at most 10 complete sentences.
+
+- There should be a section titled Data Processing which describes (in words and code) how the data were loaded into R and processed for analysis. In particular, your analysis must start from the raw CSV file containing the data. You cannot do any preprocessing outside the document. If preprocessing is time-consuming you may consider using the 
+cache = TRUE option for certain code chunks.
+
+- There should be a section titled Results in which your results are presented.
+
+- You may have other sections in your analysis, but Data Processing and Results are required.
+
+- The analysis document must have at least one figure containing a plot.
+
+- Your analysis must have no more than three figures. Figures may have multiple plots in them (i.e. panel plots), but there cannot be more than three figures total.
+
+- You must show all your code for the work in your analysis document. This may make the document a bit verbose, but that is okay. In general, you should ensure that echo = TRUE for every code chunk (this is the default setting in knitr).
+
+
+
+## **Load Data**
+
+First, we need `tidyverse`and `skimr`packages to perform the analysis. 
+
+```{r load_packages}
+
+library(tidyverse)
+library(skimr)
+
+```
+
+Once we have loaded all the functions required, we import the dataframe.
+
+```{r read_csv}
+
+storm_df <- read_csv('data/repdata_data_StormData.csv')
+
+storm_df |> head()
+
+```
+
+
+We inspect the loaded dataframe. 
+
+```{r skim}
+
+skim(storm_df)
+
+```
+
+
+
+## **Data Cleaning and Transformation**
+
+
+First, we select the most relevant columns in order to respond about the health impact and the economic consequences. 
+
+```{r select_var}
+
+storm_df <- storm_df |> 
+  select(BGN_DATE, EVTYPE, FATALITIES, INJURIES, PROPDMG, PROPDMGEXP, CROPDMG, CROPDMGEXP)
+
+storm_df |> head()
+
+```
+
+We apply some transformations to the variables. 
+
+```{r transformation}
+
+# Convert BGN_DATE to Date type
+storm_df$BGN_DATE <- mdy_hms(storm_df$BGN_DATE)
+
+# Normalize damage exponents
+exp_transform <- function(exp) {
+  exp <- toupper(exp)
+  ifelse(exp == "K", 1e3, ifelse(exp == "M", 1e6, ifelse(exp == "B", 1e9, 1)))
+}
+
+storm_df <- storm_df |>
+  mutate(
+    PROPDMGEXP = exp_transform(PROPDMGEXP),
+    CROPDMGEXP = exp_transform(CROPDMGEXP),
+    PROPDMG_TOTAL = PROPDMG * PROPDMGEXP,
+    CROPDMG_TOTAL = CROPDMG * CROPDMGEXP
+  )
+
+storm_df |> head()
+
+```
+
+After that we summarize total health and economic impacts by event type.
+
+```{r summarize_health}
+
+health_impact <- storm_df |>
+  group_by(EVTYPE) |>
+  summarize(
+    total_fatalities = sum(FATALITIES, na.rm = TRUE),
+    total_injuries = sum(INJURIES, na.rm = TRUE)) |>
+  arrange(desc(total_fatalities), desc(total_injuries))
+
+health_impact |> head()
+
+```
+
+
+```{r summarize_economic_impact}
+
+economic_impact <- storm_df |>
+  group_by(EVTYPE) |>
+  summarize(total_prop_dmg = sum(PROPDMG_TOTAL, na.rm = TRUE),
+            total_crop_dmg = sum(CROPDMG_TOTAL, na.rm = TRUE),
+            total_dmg = total_prop_dmg + total_crop_dmg) |>
+  arrange(desc(total_dmg))
+
+economic_impact |> head()
+
+```
+
+
+## Results
+
+### Most Harmful Events to Population Health
+
+We can plot the top 10 events by total fatalities and injuries.
+
+```{r plot_injuries}
+
+top_health_impact <- health_impact |> 
+  top_n(10, wt = total_fatalities + total_injuries)
+
+ggplot(top_health_impact, aes(x = reorder(EVTYPE, total_fatalities + total_injuries),
+                              y = total_fatalities + total_injuries)) +
+  geom_bar(stat = "identity") +
+  coord_flip() +
+  labs(
+    title = "Top 10 Most Harmful Event Types to Population Health",
+    x = "Event Type",
+    y = "Total Fatalities and Injuries"
+  ) +
+  theme_minimal()
+
+```
+
+
+### Events with Greatest Economic Consequences
+
+Finally, we plot the top 10 events by total economic damage.
+
+```{r plot_damage}
+
+top_economic_impact <- economic_impact |> top_n(10, wt = total_dmg)
+
+ggplot(top_economic_impact, aes(x = reorder(EVTYPE, total_dmg),
+                                y = total_dmg / 1e9)) +
+  geom_bar(stat = "identity") +
+  coord_flip() +
+  labs(
+    title = "Top 10 Event Types with Greatest Economic Consequences",
+    x = "Event Type", 
+    y = "Total Damage (in billions USD)"
+  ) +
+  theme_minimal()
+
+```
+
+## **Conclusion**
+
+This analysis identifies the most harmful storm events in terms of public health and economic impact. Tornadoes are the most significant threat to population health, causing the highest number of fatalities and injuries. Floods and hurricanes/typhoons are responsible for the greatest economic damages, emphasizing the need for targeted preparedness and response strategies for these events.
+
+## **R Version**
+
+```{r r_version}
+
+R.version
+
+```
+
+
+
