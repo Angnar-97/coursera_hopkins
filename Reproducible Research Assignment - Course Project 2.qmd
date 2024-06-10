@@ -1,5 +1,5 @@
 ---
-title: "Personal Activity Monitoring Device Research"
+title: "A Comprehensive Analysis of Storm-Induced Damages: Insights from NOAA Data"
 subtitle: 'Reproducible Research'
 affiliation: 'Johns Hopkins University'
 author: 'Alejandro Navas González'
